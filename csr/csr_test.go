@@ -2,12 +2,15 @@ package csr
 
 import (
 	"context"
+	"crypto/ecdsa"
+	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/asn1"
 	"errors"
+	"log"
 	"net"
 	"strings"
 	"testing"
@@ -298,4 +301,42 @@ func TestDuplicateExtensionRejection(t *testing.T) {
 
 	_, err = x509.ParseCertificateRequest(csrBytes)
 	test.AssertError(t, err, "CSR with duplicate extension OID should fail to parse")
+}
+
+func FuzzVerifyCSR(f *testing.F) {
+	// Generate a valid CSR to seed the fuzzer
+	priv, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	if err != nil {
+		log.Fatalf("Failed to parse private key: %s", err)
+	}
+
+	req := &x509.CertificateRequest{
+		Subject: pkix.Name{
+			CommonName: "CapiTalizedLetters.com",
+		},
+		DNSNames: []string{
+			"moreCAPs.com",
+			"morecaps.com",
+			"evenMOREcaps.com",
+			"Capitalizedletters.COM",
+		},
+	}
+	csr_bytes, _ := x509.CreateCertificateRequest(rand.Reader, req, priv)
+
+	// Seed the fuzzer with some initial valid data
+	f.Add(csr_bytes)
+
+	f.Fuzz(func(t *testing.T, data []byte) {
+		csr, err := x509.ParseCertificateRequest(data)
+		if err != nil {
+			// If the CSR is invalid, skip this iteration
+			return
+		}
+
+		keyPolicy, _ := goodkey.NewPolicy(nil, nil)
+
+		err = VerifyCSR(context.Background(), csr, 100, &keyPolicy, &mockPA{})
+		// We don't assert on the error here because we're just looking for panics or crashes
+		_ = err
+	})
 }
