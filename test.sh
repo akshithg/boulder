@@ -19,6 +19,8 @@ UNIT_PACKAGES=()
 UNIT_FLAGS=()
 INTEGRATION_FLAGS=()
 FILTER=()
+COVERAGE="false"
+COVERAGE_DIR="test/coverage/$(date +%Y-%m-%d_%H-%M-%S)"
 
 #
 # Cleanup Functions
@@ -105,6 +107,9 @@ With no options passed, runs standard battery of tests (lint, unit, and integrat
     -i, --integration                     Adds integration to the list of tests to run
     -s, --start-py                        Adds start to the list of tests to run
     -g, --generate                        Adds generate to the list of tests to run
+    -c, --coverage                        Enables coverage for tests
+    -d <DIR>, --coverage-directory=<DIR>  Directory to store coverage files in
+                                          Default: test/coverage/<timestamp>
     -f <REGEX>, --filter=<REGEX>          Run only those tests matching the regular expression
 
                                           Note:
@@ -120,7 +125,7 @@ With no options passed, runs standard battery of tests (lint, unit, and integrat
 EOM
 )"
 
-while getopts luvwecismgnhp:f:-: OPT; do
+while getopts luvwecisdgnhp:f:-: OPT; do
   if [ "$OPT" = - ]; then     # long option: reformulate OPT and OPTARG
     OPT="${OPTARG%%=*}"       # extract long option name
     OPTARG="${OPTARG#$OPT}"   # extract long option argument (may be empty)
@@ -138,6 +143,8 @@ while getopts luvwecismgnhp:f:-: OPT; do
     s | start-py )                   RUN+=("start") ;;
     g | generate )                   RUN+=("generate") ;;
     n | config-next )                BOULDER_CONFIG_DIR="test/config-next" ;;
+    c | coverage )                   COVERAGE="true" ;;
+    d | coverage-dir )               check_arg; COVERAGE_DIR="${OPTARG}" ;;
     h | help )                       print_usage_exit ;;
     ??* )                            exit_msg "Illegal option --$OPT" ;;  # bad long option
     ? )                              exit 2 ;;  # bad short option (error reported via getopts)
@@ -197,9 +204,14 @@ settings="$(cat -- <<-EOM
     UNIT_PACKAGES:      ${UNIT_PACKAGES[@]}
     UNIT_FLAGS:         ${UNIT_FLAGS[@]}
     FILTER:             ${FILTER[@]}
-
+    COVERAGE:           $COVERAGE
+    COVERAGE_DIR:       $COVERAGE_DIR
 EOM
 )"
+
+if [ "$COVERAGE" == "true" ]; then
+  mkdir -p "$COVERAGE_DIR"
+fi
 
 echo "$settings"
 print_heading "Starting..."
@@ -226,6 +238,11 @@ STAGE="unit"
 if [[ "${RUN[@]}" =~ "$STAGE" ]] ; then
   print_heading "Running Unit Tests"
   flush_redis
+
+  if [ "$COVERAGE" == "true" ]; then
+    print_heading "Running unit test with coverage enabled"
+    export GOFLAGS="-cover -covermode=atomic -coverprofile=${COVERAGE_DIR}/unit.coverprofile -coverpkg=./..."
+  fi
   run_unit_tests
 fi
 
@@ -236,10 +253,18 @@ STAGE="integration"
 if [[ "${RUN[@]}" =~ "$STAGE" ]] ; then
   print_heading "Running Integration Tests"
   flush_redis
+
+  if [ "$COVERAGE" == "true" ]; then
+    print_heading "Running go integration test with coverage enabled"
+    export GOFLAGS="-cover -covermode=atomic -coverprofile=${COVERAGE_DIR}/integration.coverprofile -coverpkg=./..."
+  fi
+
   if [[ "${INTEGRATION_FLAGS[@]}" =~ "-v" ]] ; then
-    python3 test/integration-test.py --chisel --gotestverbose "${FILTER[@]}"
+    print_heading "Running ACME integration tests with coverage enabled"
+    python3 test/integration-test.py --coverage=${COVERAGE} --coveragedir="${COVERAGE_DIR}" --chisel --gotestverbose "${FILTER[@]}"
   else
-    python3 test/integration-test.py --chisel --gotest "${FILTER[@]}"
+    print_heading "Running ACME integration tests with coverage enabled"
+    python3 test/integration-test.py --coverage=${COVERAGE} --coveragedir="$COVERAGE_DIR" --chisel --gotest "${FILTER[@]}"
   fi
 fi
 
