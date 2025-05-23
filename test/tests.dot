@@ -1,0 +1,159 @@
+digraph BoulderTests {
+    // Graph configuration
+    graph [rankdir=TB, splines=ortho, nodesep=0.5, ranksep=0.8]
+    node [shape=box, style=filled, fontname="Arial", fontsize=10]
+    edge [fontname="Arial", fontsize=8]
+
+    // Main test entry point
+    testsh [label="./test.sh\n(Main Test Runner)", fillcolor="#e1f5fe", shape=ellipse, fontsize=12, style="filled,bold"]
+
+    // Primary test categories
+    subgraph cluster_main {
+        label="Primary Test Categories"
+        style=filled
+        fillcolor="#f3e5f5"
+        
+        lints [label="Linting Tests", fillcolor="#fff3e0"]
+        unit [label="Unit Tests", fillcolor="#e8f5e8"]
+        integration [label="Integration Tests", fillcolor="#e3f2fd"]
+        start [label="Start/Smoke Tests", fillcolor="#fce4ec"]
+        generate [label="Generate Tests", fillcolor="#f1f8e9"]
+    }
+
+    // Linting test components
+    subgraph cluster_lint {
+        label="Linting Components"
+        style=filled
+        fillcolor="#fff8e1"
+        
+        golangci [label="golangci-lint\n(Go code quality)", fillcolor="#fff3e0"]
+        staticcheck [label="staticcheck\n(Go static analysis)", fillcolor="#fff3e0"]
+        pylint [label="Python Linting\n(grafana/lint.py)", fillcolor="#fff3e0"]
+        typos [label="Typos\n(Spell checking)", fillcolor="#fff3e0"]
+        configfmt [label="Config Formatting\n(JSON consistency)", fillcolor="#fff3e0"]
+    }
+
+    // Unit test components
+    subgraph cluster_unit {
+        label="Unit Test Features"
+        style=filled
+        fillcolor="#e8f5e8"
+        
+        gotest [label="Go Test Framework\n(*_test.go files)", fillcolor="#c8e6c9"]
+        coverage [label="Coverage Collection\n(--coverage)", fillcolor="#c8e6c9"]
+        race [label="Race Detection\n(-race flag)", fillcolor="#c8e6c9"]
+        serial [label="Serial Execution\n(-p=1)", fillcolor="#c8e6c9"]
+    }
+
+    // Integration test components
+    subgraph cluster_integration {
+        label="Integration Test Types"
+        style=filled
+        fillcolor="#e3f2fd"
+        
+        chisel [label="Chisel Tests\n(Python ACME e2e)", fillcolor="#bbdefb"]
+        goint [label="Go Integration Tests\n(test/integration/)", fillcolor="#bbdefb"]
+        timetravel [label="Time-Travel Tests\n(FAKECLOCK)", fillcolor="#bbdefb"]
+        loadbalance [label="Load Balance Tests\n(check_balance)", fillcolor="#bbdefb"]
+        certchecker [label="Certificate Checker\n(cert validation)", fillcolor="#bbdefb"]
+    }
+
+    // Test infrastructure services
+    subgraph cluster_infra {
+        label="Test Infrastructure"
+        style=filled
+        fillcolor="#f9fbe7"
+        
+        challtestsrv [label="Challenge Test Server\n(HTTP/DNS/TLS-ALPN)", fillcolor="#f0f4c3"]
+        cttestsrv [label="CT Test Server\n(Certificate Transparency)", fillcolor="#f0f4c3"]
+        mailtestsrv [label="Mail Test Server\n(Email notifications)", fillcolor="#f0f4c3"]
+        pardottestsrv [label="Pardot Test Server\n(CRM integration)", fillcolor="#f0f4c3"]
+        fakedns [label="Fake DNS Resolver\n(127.0.0.1 responses)", fillcolor="#f0f4c3"]
+        healthcheck [label="Service Health Checks\n(startservers.py)", fillcolor="#f0f4c3"]
+    }
+
+    // Specialized test types
+    subgraph cluster_special {
+        label="Specialized Tests"
+        style=filled
+        fillcolor="#fce4ec"
+        
+        dbmigration [label="Database Migration Tests\n(Feature flag gated)", fillcolor="#f8bbd9"]
+        grpccomm [label="gRPC Communication Tests\n(Inter-service)", fillcolor="#f8bbd9"]
+        emailnotif [label="Email/Notification Tests\n(Pardot integration)", fillcolor="#f8bbd9"]
+    }
+
+    // Main flow connections
+    testsh -> lints [label="--lints"]
+    testsh -> unit [label="--unit"]
+    testsh -> integration [label="--integration"]
+    testsh -> start [label="--start-py"]
+    testsh -> generate [label="--generate"]
+
+    // Linting connections
+    lints -> golangci
+    lints -> staticcheck
+    lints -> pylint
+    lints -> typos
+    lints -> configfmt
+
+    // Unit test connections
+    unit -> gotest
+    unit -> coverage
+    unit -> race
+    unit -> serial
+
+    // Integration test connections
+    integration -> chisel
+    integration -> goint
+    integration -> timetravel
+    integration -> loadbalance
+    integration -> certchecker
+
+    // Infrastructure dependencies
+    chisel -> challtestsrv [style=dashed, label="uses"]
+    chisel -> fakedns [style=dashed, label="uses"]
+    goint -> challtestsrv [style=dashed, label="uses"]
+    integration -> healthcheck [style=dashed, label="monitors"]
+    
+    certchecker -> cttestsrv [style=dashed, label="validates CT"]
+    emailnotif -> mailtestsrv [style=dashed, label="uses"]
+    emailnotif -> pardottestsrv [style=dashed, label="uses"]
+
+    // Special test relationships
+    integration -> dbmigration [style=dotted, label="includes"]
+    integration -> grpccomm [style=dotted, label="includes"]
+    integration -> emailnotif [style=dotted, label="includes"]
+
+    // Time travel setup
+    timetravel -> chisel [style=dashed, color=blue, label="6mo/20d ago\nsetup"]
+
+    // Coverage flows
+    coverage -> unit [style=dashed, color=green, label="reports"]
+    coverage -> integration [style=dashed, color=green, label="reports"]
+
+    // Filter support
+    filter [label="Filter Support\n(--filter regex)", fillcolor="#ffecb3", shape=diamond]
+    filter -> unit [style=dotted, label="applies to"]
+    filter -> integration [style=dotted, label="applies to"]
+
+    // Execution patterns
+    subgraph cluster_patterns {
+        label="Execution Patterns"
+        style=filled
+        fillcolor="#f3e5f5"
+        
+        patterns [label="• Serial execution (-p=1)\n• Coverage collection\n• Race detection\n• Regex filtering\n• Service dependencies", 
+                 fillcolor="#e1bee7", shape=note]
+    }
+
+    // Legend
+    subgraph cluster_legend {
+        label="Legend"
+        style=filled
+        fillcolor="#fafafa"
+        
+        legend [label="Solid arrows: Direct execution\nDashed arrows: Infrastructure usage\nDotted arrows: Feature inclusion", 
+               fillcolor="#ffffff", shape=plaintext, fontsize=8]
+    }
+}
