@@ -256,18 +256,28 @@ if [[ "${RUN[@]}" =~ "$STAGE" ]] ; then
   print_heading "Running Integration Tests"
   flush_redis
 
+  # Set up test parameters
+  INTEGRATION_ARGS=("--chisel")
+
+  # Add verbose flag if requested
+  if [[ "${INTEGRATION_FLAGS[@]}" =~ "-v" ]] ; then
+    INTEGRATION_ARGS+=("--gotestverbose")
+  else
+    INTEGRATION_ARGS+=("--gotest")
+  fi
+
+  # Add coverage settings if enabled
   if [ "$COVERAGE" == "true" ]; then
     print_heading "Running go integration test with coverage enabled"
     export GOFLAGS="-cover -covermode=atomic -coverprofile=${COVERAGE_DIR}/integration.coverprofile -coverpkg=./..."
+    INTEGRATION_ARGS+=("--coverage" "--coveragedir=${COVERAGE_DIR}")
   fi
 
-  if [[ "${INTEGRATION_FLAGS[@]}" =~ "-v" ]] ; then
-    print_heading "Running ACME integration tests with coverage enabled"
-    python3 test/integration-test.py --coverage=${COVERAGE} --coveragedir="${COVERAGE_DIR}" --chisel --gotestverbose "${FILTER[@]}"
-  else
-    print_heading "Running ACME integration tests with coverage enabled"
-    python3 test/integration-test.py --coverage=${COVERAGE} --coveragedir="$COVERAGE_DIR" --chisel --gotest "${FILTER[@]}"
-  fi
+  # Add any filters
+  INTEGRATION_ARGS+=("${FILTER[@]}")
+
+  # Run the integration tests with all collected arguments
+  python3 test/integration-test.py "${INTEGRATION_ARGS[@]}"
 fi
 
 # Test that just ./start.py works, which is a proxy for testing that
