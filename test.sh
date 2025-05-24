@@ -106,6 +106,7 @@ With no options passed, runs standard battery of tests (lint, unit, and integrat
     -n, --config-next                     Changes BOULDER_CONFIG_DIR from test/config to test/config-next
     -i, --integration                     Adds integration to the list of tests to run
     -s, --start-py                        Adds start to the list of tests to run
+    -m, --acme                            Adds acme test to the list of tests to run
     -g, --generate                        Adds generate to the list of tests to run
     -c, --coverage                        Enables coverage for tests
     -d <DIR>, --coverage-directory=<DIR>  Directory to store coverage files in
@@ -125,7 +126,7 @@ With no options passed, runs standard battery of tests (lint, unit, and integrat
 EOM
 )"
 
-while getopts luvwecisdgnhp:f:-: OPT; do
+while getopts luvwecimsdgnhp:f:-: OPT; do
   if [ "$OPT" = - ]; then     # long option: reformulate OPT and OPTARG
     OPT="${OPTARG%%=*}"       # extract long option name
     OPTARG="${OPTARG#$OPT}"   # extract long option argument (may be empty)
@@ -143,6 +144,7 @@ while getopts luvwecisdgnhp:f:-: OPT; do
     s | start-py )                   RUN+=("start") ;;
     g | generate )                   RUN+=("generate") ;;
     n | config-next )                BOULDER_CONFIG_DIR="test/config-next" ;;
+    m | acme )                       RUN+=("acme") ;;
     c | coverage )                   COVERAGE="true" ;;
     d | coverage-dir )               check_arg; COVERAGE_DIR="${OPTARG}" ;;
     h | help )                       print_usage_exit ;;
@@ -278,6 +280,31 @@ if [[ "${RUN[@]}" =~ "$STAGE" ]] ; then
 
   # Run the integration tests with all collected arguments
   python3 test/integration-test.py "${INTEGRATION_ARGS[@]}"
+fi
+
+#
+# ACME tests - these are the chisel tests separated from the main integration
+# tests which also includes go tests.
+#
+STAGE="acme"
+if [[ "${RUN[@]}" =~ "$STAGE" ]] ; then
+  print_heading "Running ACME Tests"
+  flush_redis
+
+  # Set up test parameters
+  ACME_ARGS=("--chisel")
+
+  # Add coverage settings if enabled
+  if [ "$COVERAGE" == "true" ]; then
+    print_heading "Running go acme test with coverage enabled"
+    ACME_ARGS+=("--coverage" "--coveragedir=${COVERAGE_DIR}")
+  fi
+
+  # Add any filters
+  ACME_ARGS+=("${FILTER[@]}")
+
+  # Run the acme tests with all collected arguments
+  python3 test/integration-test.py "${ACME_ARGS[@]}"
 fi
 
 # Test that just ./start.py works, which is a proxy for testing that
