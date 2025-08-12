@@ -9,7 +9,7 @@ hotfix release will be tagged on the branch using the related Tag Release tool.
 
 Usage:
 
-	go run github.com/letsencrypt/boulder/tools/release/tag@main [-push] tagname
+	go run github.com/letsencrypt/boulder/tools/release/branch@main [-push] tagname
 
 The provided tagname must be a pre-existing release tag which is reachable from
 the "main" branch.
@@ -90,7 +90,7 @@ func branch(args []string) error {
 	// components.
 	parts := strings.SplitN(tag, ".", 3)
 	if len(parts) != 3 {
-		return fmt.Errorf("failed to parse patch version from release tag %q", tag)
+		return fmt.Errorf("failed to parse release tag %q as semver", tag)
 	}
 
 	major := parts[0]
@@ -101,7 +101,7 @@ func branch(args []string) error {
 	minor := parts[1]
 	t, err := time.Parse("20060102", minor)
 	if err != nil {
-		return fmt.Errorf("expected minor portion of release tag to be a ")
+		return fmt.Errorf("expected minor portion of release tag to be a date: %w", err)
 	}
 	if t.Year() < 2015 {
 		return fmt.Errorf("minor portion of release tag appears to be an unrealistic date: %q", t.String())
