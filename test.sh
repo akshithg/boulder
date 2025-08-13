@@ -264,7 +264,7 @@ if [[ "${RUN[@]}" =~ "$STAGE" ]] ; then
   fi
 
   # Add coverage settings if enabled
-  if [ "$COVERAGE" == "true" ]; then
+  if [ "${COVERAGE}" == "true" ]; then
     # export GOFLAGS="-cover -covermode=atomic -coverprofile=${COVERAGE_DIR}/integration.coverprofile -coverpkg=./..."
     INTEGRATION_ARGS+=("--coverage" "--coverage-dir=${COVERAGE_DIR}")
   fi
