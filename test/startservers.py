@@ -195,7 +195,6 @@ def install(race_detection, coverage=False):
 
     if coverage:
         go_build_flags += ' -cover' # https://go.dev/blog/integration-test-coverage
-        print("Building with flags: %s" % go_build_flags)
 
     return subprocess.call(["/usr/bin/make", "GO_BUILD_FLAGS=%s" % go_build_flags]) == 0
 
@@ -204,7 +203,6 @@ def run(cmd, fakeclock, coverage_dir=None):
     e.setdefault("GORACE", "halt_on_error=1")
     if coverage_dir:
         abs_coverage_dir = os.path.abspath(coverage_dir)
-        print("Running with coverage in %s" % abs_coverage_dir)
         #FIXME warning: GOCOVERDIR not set, no coverage data emitted - for a few binaries inspite of the environment variable being set
         e.setdefault("GOCOVERDIR", abs_coverage_dir)
         e.setdefault("GOCOVERMODE", "atomic")

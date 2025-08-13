@@ -56,6 +56,7 @@ def main():
     parser.add_argument('--coverage', dest="coverage", action="store_true",
                         help="run integration tests with coverage")
     parser.add_argument('--coveragedir', dest="coverage_dir", action="store",
+                        default=f"test/coverage/{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}",
                         help="directory to store coverage data")
     parser.add_argument('--gotest', dest="run_go", action="store_true",
                         help="run Go integration tests")
@@ -68,9 +69,6 @@ def main():
     parser.add_argument('--custom', metavar="CMD", help="run custom command")
     parser.set_defaults(run_chisel=False, test_case_filter="", skip_setup=False, coverage=False, coverage_dir=None)
     args = parser.parse_args()
-
-    if args.coverage and not args.coverage_dir:
-        raise(Exception("must specify --coveragedir when using --coverage"))
 
     if args.coverage and args.coverage_dir:
         if not os.path.exists(args.coverage_dir):
@@ -127,7 +125,6 @@ def main():
     exit_status = 0
 
 def run_chisel(test_case_filter):
-    print("Running ACME tests")
     for key, value in inspect.getmembers(v2_integration):
       if callable(value) and key.startswith('test_') and re.search(test_case_filter, key):
         value()
