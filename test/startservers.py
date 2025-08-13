@@ -203,7 +203,6 @@ def run(cmd, fakeclock, coverage_dir=None):
     e.setdefault("GORACE", "halt_on_error=1")
     if coverage_dir:
         abs_coverage_dir = os.path.abspath(coverage_dir)
-        #FIXME warning: GOCOVERDIR not set, no coverage data emitted - for a few binaries inspite of the environment variable being set
         e.setdefault("GOCOVERDIR", abs_coverage_dir)
         e.setdefault("GOCOVERMODE", "atomic")
     if fakeclock:

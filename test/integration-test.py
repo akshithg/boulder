@@ -55,7 +55,7 @@ def main():
                         help="run integration tests using chisel")
     parser.add_argument('--coverage', dest="coverage", action="store_true",
                         help="run integration tests with coverage")
-    parser.add_argument('--coveragedir', dest="coverage_dir", action="store",
+    parser.add_argument('--coverage-dir', dest="coverage_dir", action="store",
                         default=f"test/coverage/{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}",
                         help="directory to store coverage data")
     parser.add_argument('--gotest', dest="run_go", action="store_true",
@@ -74,7 +74,7 @@ def main():
         if not os.path.exists(args.coverage_dir):
             os.makedirs(args.coverage_dir)
         if not os.path.isdir(args.coverage_dir):
-            raise(Exception("coveragedir must be a directory"))
+            raise(Exception("coverage-dir must be a directory"))
 
     if not (args.run_chisel or args.custom  or args.run_go is not None):
         raise(Exception("must run at least one of the letsencrypt or chisel tests with --chisel, --gotest, or --custom"))
@@ -118,6 +118,10 @@ def main():
         run_cert_checker()
         check_balance()
 
+    # If coverage is enabled, process the coverage data
+    if args.coverage:
+        process_covdata(args.coverage_dir)
+
     if not startservers.check():
         raise(Exception("startservers.check failed"))
 
@@ -158,6 +162,18 @@ def check_balance():
 
 def run_cert_checker():
     run(["./bin/boulder", "cert-checker", "-config", "%s/cert-checker.json" % config_dir])
+
+def process_covdata(coverage_dir):
+    """Process coverage data and generate reports."""
+    if not os.path.exists(coverage_dir):
+        raise(Exception("Coverage directory does not exist: %s" % coverage_dir))
+
+    # Generate text report
+    coverage_dir = os.path.abspath(coverage_dir)
+    cov_text = os.path.join(coverage_dir, "integration.coverprofile")
+    # this works, but if it takes a long time consider merging with `go tool covdata merge` first
+    # https://go.dev/blog/integration-test-coverage#merging-raw-profiles-with-go-tool-covdata-merge
+    subprocess.check_call(["go", "tool", "covdata", "textfmt", "-i", coverage_dir, "-o", cov_text])
 
 if __name__ == "__main__":
     main()
