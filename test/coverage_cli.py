@@ -211,21 +211,6 @@ class CoverageAnalyzer:
         self.generated_files.append(combined_profile)
         self.log(f"Combined coverprofile created at {combined_profile}")
 
-        # Create filtered profile
-        filtered_profile = self.coverage_dir / "filtered.combined.coverprofile"
-        self._filter_profile(combined_profile, filtered_profile)
-        self.generated_files.append(filtered_profile)
-        self.log(f"Filtered coverprofile created at {filtered_profile}")
-
-    def _filter_profile(self, input_file: Path, output_file: Path) -> None:
-        """Filter a coverage profile to exclude test files, etc."""
-        exclude_patterns = [r'/test/', r'pb\.go', r'/cmd/']
-        patterns = '|'.join(exclude_patterns)
-
-        with open(input_file, 'r') as infile, open(output_file, 'w') as outfile:
-            for line in infile:
-                if not re.search(patterns, line):
-                    outfile.write(line)
 
     def _generate_text_reports(self) -> None:
         """Generate plaintext coverage reports"""

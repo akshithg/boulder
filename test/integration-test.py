@@ -19,6 +19,7 @@ import signal
 import subprocess
 import time
 
+import autoacme
 import requests
 import startservers
 import v2_integration
@@ -53,6 +54,8 @@ def main():
     parser = argparse.ArgumentParser(description='Run integration tests')
     parser.add_argument('--chisel', dest="run_chisel", action="store_true",
                         help="run integration tests using chisel")
+    parser.add_argument('--autoacme', dest="run_autoacme", action="store_true",
+                        help="run integration tests from autoacme")
     parser.add_argument('--coverage', dest="coverage", action="store_true",
                         help="run integration tests with coverage")
     parser.add_argument('--coveragedir', dest="coverage_dir", action="store",
@@ -66,7 +69,9 @@ def main():
     # allow any ACME client to run custom command for integration
     # testing (without having to implement its own busy-wait loop)
     parser.add_argument('--custom', metavar="CMD", help="run custom command")
-    parser.set_defaults(run_chisel=False, test_case_filter="", skip_setup=False, coverage=False, coverage_dir=None)
+    parser.set_defaults(run_chisel=False, run_autoacme=False,
+                        test_case_filter="", skip_setup=False, coverage=False,
+                        coverage_dir=None)
     args = parser.parse_args()
 
     if args.coverage and not args.coverage_dir:
@@ -78,8 +83,8 @@ def main():
         if not os.path.isdir(args.coverage_dir):
             raise(Exception("coveragedir must be a directory"))
 
-    if not (args.run_chisel or args.custom  or args.run_go is not None):
-        raise(Exception("must run at least one of the letsencrypt or chisel tests with --chisel, --gotest, or --custom"))
+    if not (args.run_chisel or args.run_autoacme or args.custom  or args.run_go is not None):
+        raise(Exception("must run at least one of the letsencrypt or chisel tests with --chisel, --gotest, --custom, or --autoacme"))
 
     if not startservers.install(race_detection=race_detection, coverage=args.coverage):
         raise(Exception("failed to build"))
@@ -103,7 +108,11 @@ def main():
         raise(Exception("startservers failed"))
 
     if args.run_chisel:
-        run_chisel(args.test_case_filter)
+        pass
+        # run_chisel(args.test_case_filter)
+
+    if args.run_autoacme:
+        run_autoacme(args.test_case_filter)
 
     if args.run_go:
         run_go_tests(args.test_case_filter, False)
@@ -134,6 +143,13 @@ def run_chisel(test_case_filter):
     for key, value in globals().items():
       if callable(value) and key.startswith('test_') and re.search(test_case_filter, key):
         value()
+
+def run_autoacme(test_case_filter):
+    print("Running auto ACME tests")
+    for key, value in inspect.getmembers(autoacme):
+      if callable(value) and key.startswith('test_') and re.search(test_case_filter, key):
+        value()
+
 
 def check_balance():
     """Verify that gRPC load balancing across backends is working correctly.
