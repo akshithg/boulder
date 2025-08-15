@@ -173,7 +173,7 @@ def process_covdata(coverage_dir):
     cov_text = os.path.join(coverage_dir, "integration.coverprofile")
     # this works, but if it takes a long time consider merging with `go tool covdata merge` first
     # https://go.dev/blog/integration-test-coverage#merging-raw-profiles-with-go-tool-covdata-merge
-    subprocess.check_call(["go", "tool", "covdata", "textfmt", "-i", coverage_dir, "-o", cov_text])
+    run(["go", "tool", "covdata", "textfmt", "-i", coverage_dir, "-o", cov_text])
 
 if __name__ == "__main__":
     main()

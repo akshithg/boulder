@@ -239,9 +239,11 @@ if [[ "${RUN[@]}" =~ "$STAGE" ]] ; then
   print_heading "Running Unit Tests"
   flush_redis
 
-  if [ "$COVERAGE" == "true" ]; then
-    export GOFLAGS="-cover -covermode=atomic -coverprofile=${COVERAGE_DIR}/unit.coverprofile -coverpkg=./..."
+  if [ "${COVERAGE}" == "true" ]; then
+    UNIT_CSV=$(IFS=,; echo "${UNIT_PACKAGES[*]}")
+    UNIT_FLAGS+=("-cover" "-covermode=atomic" "-coverprofile=${COVERAGE_DIR}/unit.coverprofile" "-coverpkg=${UNIT_CSV}")
   fi
+
   run_unit_tests
 fi
 
@@ -265,7 +267,6 @@ if [[ "${RUN[@]}" =~ "$STAGE" ]] ; then
 
   # Add coverage settings if enabled
   if [ "${COVERAGE}" == "true" ]; then
-    # export GOFLAGS="-cover -covermode=atomic -coverprofile=${COVERAGE_DIR}/integration.coverprofile -coverpkg=./..."
     INTEGRATION_ARGS+=("--coverage" "--coverage-dir=${COVERAGE_DIR}")
   fi
 
