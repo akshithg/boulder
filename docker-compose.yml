@@ -13,7 +13,7 @@ services:
       # To solve HTTP-01 and TLS-ALPN-01 challenges, change the IP in FAKE_DNS
       # to the IP address where your ACME client's solver is listening. This is
       # pointing at the boulder service's "public" IP, where challtestsrv is.
-      FAKE_DNS: 64.112.117.122
+      FAKE_DNS: 172.30.0.2
       BOULDER_CONFIG_DIR: test/config
       GOCACHE: /boulder/.gocache/go-build
     volumes:
@@ -23,10 +23,8 @@ services:
     networks:
       bouldernet:
         ipv4_address: 10.77.77.77
-      publicnet:
-        ipv4_address: 64.112.117.122
-      publicnet2:
-        ipv4_address: 64.112.117.134
+      acme-net:
+        ipv4_address: 172.30.0.3
     # Use consul as a backup to Docker's embedded DNS server. If there's a name
     # Docker's DNS server doesn't know about, it will forward the query to this
     # IP (running consul).
@@ -190,3 +188,7 @@ networks:
       driver: default
       config:
         - subnet: 64.112.117.128/25
+
+  acme-net:
+    external: true
+    name: acme-net
