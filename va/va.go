@@ -536,6 +536,9 @@ func (va *ValidationAuthorityImpl) doRemoteOperation(ctx context.Context, op rem
 	//  - Dec 15, 2026: MUST implement using at least 5 perspectives
 	// See "Phased Implementation Timeline" in
 	// https://github.com/cabforum/servercert/blob/main/docs/BR.md#3229-multi-perspective-issuance-corroboration
+	if remoteVACount == 0 {
+		return summarizeMPIC(nil, nil, nil), nil
+	}
 	if remoteVACount < 3 {
 		return nil, probs.ServerInternal("Insufficient remote perspectives: need at least 3")
 	}

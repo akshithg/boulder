@@ -3,14 +3,9 @@
 		"userAgent": "boulder",
 		"debugAddr": ":8004",
 		"dnsTries": 3,
-		"dnsProvider": {
-			"dnsAuthority": "consul.service.consul",
-			"srvLookup": {
-				"service": "doh",
-				"domain": "service.consul"
-			}
-		},
-		"dnsTimeout": "1s",
+		"dnsStaticResolvers": ["172.30.0.2:8343"],
+		"dnsTimeout": "10s",
+		"dnsAllowLoopbackAddresses": true,
 		"issuerDomain": "happy-hacker-ca.invalid",
 		"tls": {
 			"caCertfile": "test/certs/ipki/minica.pem",
@@ -38,31 +33,9 @@
 			}
 		},
 		"features": {
-			"DOH": true
+			"DOH": false
 		},
-		"remoteVAs": [
-			{
-				"serverAddress": "rva1.service.consul:9397",
-				"timeout": "15s",
-				"hostOverride": "rva1.boulder",
-				"perspective": "dadaist",
-				"rir": "ARIN"
-			},
-			{
-				"serverAddress": "rva1.service.consul:9498",
-				"timeout": "15s",
-				"hostOverride": "rva1.boulder",
-				"perspective": "surrealist",
-				"rir": "RIPE"
-			},
-			{
-				"serverAddress": "rva1.service.consul:9499",
-				"timeout": "15s",
-				"hostOverride": "rva1.boulder",
-				"perspective": "cubist",
-				"rir": "ARIN"
-			}
-		],
+		"remoteVAs": [],
 		"accountURIPrefixes": [
 			"http://boulder.service.consul:4000/acme/reg/",
 			"http://boulder.service.consul:4001/acme/acct/"
