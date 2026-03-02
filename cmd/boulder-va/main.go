@@ -3,7 +3,6 @@ package notmain
 import (
 	"context"
 	"flag"
-	"net/netip"
 	"os"
 	"time"
 
@@ -140,10 +139,10 @@ func main() {
 		}
 	}
 
-	var reservedIPFunc = iana.IsReservedAddr
-	if c.VA.DNSAllowLoopbackAddresses {
-		reservedIPFunc = func(ip netip.Addr) error { return nil }
-	}
+	// var reservedIPFunc = iana.IsReservedAddr
+	// if c.VA.DNSAllowLoopbackAddresses {
+	// 	reservedIPFunc = func(ip netip.Addr) error { return nil }
+	// }
 
 	vai, err := va.NewValidationAuthorityImpl(
 		resolver,
@@ -156,7 +155,7 @@ func main() {
 		c.VA.AccountURIPrefixes,
 		va.PrimaryPerspective,
 		"",
-		reservedIPFunc)
+		iana.IsReservedAddr) // reservedIPFunc
 	cmd.FailOnError(err, "Unable to create VA server")
 
 	start, err := bgrpc.NewServer(c.VA.GRPC, logger).Add(

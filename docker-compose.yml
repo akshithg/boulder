@@ -24,7 +24,7 @@ services:
       bouldernet:
         ipv4_address: 10.77.77.77
       acme-net:
-        ipv4_address: 172.30.0.3
+        ipv4_address: 172.30.0.5
     # Use consul as a backup to Docker's embedded DNS server. If there's a name
     # Docker's DNS server doesn't know about, it will forward the query to this
     # IP (running consul).
